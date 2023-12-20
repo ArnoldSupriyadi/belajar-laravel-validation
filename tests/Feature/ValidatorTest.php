@@ -80,4 +80,54 @@ class ValidatorTest extends TestCase
             Log::error($message->toJson(JSON_PRETTY_PRINT));
         }
     }
+
+    public function testValidatorValidationMultipleRules()
+    {
+        $data = [
+            "username" => "eko",
+            "password" => "eko"
+        ];
+
+        $rules = [
+            "username" => "required|email|max:100",
+            "password" => ["required","min:6", "max:20"]
+        ];
+
+        $validator = Validator::make($data, $rules);
+        self::assertNotNull($validator);
+
+        self::assertFalse($validator->passes());
+        self::assertTrue($validator->fails());
+
+        $message = $validator->getMessageBag();
+        
+        Log::info($message->toJson(JSON_PRETTY_PRINT));
+    }
+
+    public function testValidatorValidData()
+    {
+        $data = [
+            "username" => "admin@pzn.com",
+            "password" => "rahasia",
+            "is_admin" => true,
+            "others" => "xxx"
+        ];
+
+        $rules = [
+            "username" => "required|email|max:100",
+            "password" => "required|min:6|max:20"
+        ];
+
+        $validator = Validator::make($data, $rules);
+        self::assertNotNull($validator);
+
+        try {
+            $valid = $validator->validate();
+            Log::info(json_encode($valid, JSON_PRETTY_PRINT));
+        } catch (ValidationException $exception) {
+            self::assertNotNull($exception->validator);
+            $message = $exception->validator->errors();
+            Log::error($message->toJson(JSON_PRETTY_PRINT));
+        }
+    }
 }
